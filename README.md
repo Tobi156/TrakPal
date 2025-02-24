@@ -16,6 +16,9 @@
 - **Version Control**: GitHub.
 - **Project Management**: GitHub Project.
 
+## Status
+- **In progress**
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
