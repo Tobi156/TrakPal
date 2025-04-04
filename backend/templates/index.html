@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - TrakPal{% endblock %}
+
+{% block content %}
+<div class="container text-center">
+    <h1 class="mb-4">Welcome to TrakPal</h1>
+    <p class="lead">Your personal academic and career tracking assistant.</p>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Courses</h5>
+                    <p class="card-text">Add and view your courses.</p>
+                    <a href="{{ url_for('courses') }}" class="btn btn-light">Go to Courses</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Track Grades</h5>
+                    <p class="card-text">Enter and monitor your academic performance.</p>
+                    <a href="{{ url_for('grades') }}" class="btn btn-light">Go to Grades</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Career Recommendations</h5>
+                    <p class="card-text">Get career guidance based on your GPA.</p>
+                    <a href="{{ url_for('careers') }}" class="btn btn-light">Explore Careers</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
