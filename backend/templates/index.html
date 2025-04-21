@@ -1,39 +1,79 @@
-{% extends 'base.html' %}
-{% block title %}Dashboard - TrakPal{% endblock %}
+{% extends "layout.html" %}
+{% block title %}Home - TrakPal{% endblock %}
 
 {% block content %}
-<div class="container text-center">
-    <h1 class="mb-4">Welcome to TrakPal</h1>
+<div class="text-center">
+    <h1 class="mb-4">Welcome to <strong>TrakPal</strong></h1>
     <p class="lead">Your personal academic and career tracking assistant.</p>
 
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Manage Courses</h5>
-                    <p class="card-text">Add and view your courses.</p>
-                    <a href="{{ url_for('courses') }}" class="btn btn-light">Go to Courses</a>
+    {% if user %}
+    <div class="alert alert-primary mt-4" role="alert">
+        <h5 class="mb-1">User: {{ user.name }}</h5>
+        <p class="mb-0">Major: {{ user.major or "Undeclared" }}</p>
+        <p class="mb-0">Courses Taken: {{ stats.total_courses or 0 }}</p>
+        <p class="mb-0">Average Grade: {{ stats.avg_grade or "N/A" }}</p>
+    </div>
+    {% endif %}
+
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100" style="background-color: #0d6efd; color: white; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title">Manage Courses</h5>
+                        <p class="card-text">Add and view your courses.</p>
+                    </div>
+                    <a href="{{ url_for('courses') }}" class="btn btn-light mt-3">Go to Courses</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Track Grades</h5>
-                    <p class="card-text">Enter and monitor your academic performance.</p>
-                    <a href="{{ url_for('grades') }}" class="btn btn-light">Go to Grades</a>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100" style="background-color: #0d6efd; color: white; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title">Track Grades</h5>
+                        <p class="card-text">Enter and monitor your academic performance.</p>
+                    </div>
+                    <a href="{{ url_for('grades') }}" class="btn btn-light mt-3">Go to Grades</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Career Recommendations</h5>
-                    <p class="card-text">Get career guidance based on your GPA.</p>
-                    <a href="{{ url_for('careers') }}" class="btn btn-light">Explore Careers</a>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100" style="background-color: #0d6efd; color: white; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title">Career Recommendations</h5>
+                        <p class="card-text">Get career guidance based on your GPA.</p>
+                    </div>
+                    <a href="{{ url_for('careers') }}" class="btn btn-light mt-3">Explore Careers</a>
                 </div>
             </div>
         </div>
     </div>
+
+    {% if careers %}
+    <div class="mt-5">
+        <h3>Recommended Careers for You</h3>
+        <div class="row justify-content-center">
+            {% for career in careers %}
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <img src="https://raw.githubusercontent.com/xawmbii/hw/main/images.png" class="card-img-top" alt="{{ career.career_name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ career.career_name }}</h5>
+                        <p class="card-text">{{ career.description }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="mt-4 text-muted">
+        <p>No career recommendations available yet. Try adding some grades!</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,22 +1,23 @@
-{% extends 'base.html' %}
+{% extends "layout.html" %}
+{% block title %}Careers - TrakPal{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h2 class="text-center mb-4">Career Recommendations</h2>
-        <div class="row">
-            {% for career in careers %}
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <img src="{{ career.image_url }}" class="card-img-top" alt="{{ career.name }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ career.name }}</h5>
-                        <p class="card-text">{{ career.description }}</p>
-                    </div>
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Career Recommendations</h2>
+    <div class="row">
+        {% for career in careers %}
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img src="https://raw.githubusercontent.com/xawmbii/hw/main/images.png"
+                     class="card-img-top img-fluid"
+                     alt="{{ career.career_name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ career.career_name }}</h5>
+                    <p class="card-text">{{ career.description }}</p>
                 </div>
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

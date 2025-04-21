@@ -1,34 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>User Dashboard</h1>
-    
-    <h2>Add a New User</h2>
-    <form action="{{ url_for('add_user') }}" method="POST">
-        <label>Name:</label>
-        <input type="text" name="name" required><br>
+{% extends "layout.html" %}
+{% block title %}Dashboard - TrakPal{% endblock %}
 
-        <label>Email:</label>
-        <input type="email" name="email" required><br>
+{% block content %}
+<div class="container">
+    <h1 class="mb-4 text-center">User Dashboard</h1>
 
-        <label>Password:</label>
-        <input type="password" name="password" required><br>
+    <!-- Add User Form -->
+    <div class="card mb-4 shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Add a New User</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('add_user') }}" method="POST">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <input type="text" name="name" id="name" class="form-control" required>
+                </div>
 
-        <button type="submit">Add User</button>
-    </form>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email:</label>
+                    <input type="email" name="email" id="email" class="form-control" required>
+                </div>
 
-    <h2>Registered Users</h2>
-    <ul>
-        {% for user in users %}
-            <li>{{ user[1] }} - {{ user[2] }}</li>
-        {% endfor %}
-    </ul>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <input type="password" name="password" id="password" class="form-control" required>
+                </div>
 
-    <a href="{{ url_for('home') }}">Back to Home</a>
-</body>
-</html>
+                <button type="submit" class="btn btn-success">Add User</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registered Users -->
+    <div class="card shadow">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Registered Users</h5>
+        </div>
+        <div class="card-body">
+            {% if users %}
+                <ul class="list-group">
+                    {% for user in users %}
+                        <li class="list-group-item">{{ user[1] }} — {{ user[2] }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No users registered yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
