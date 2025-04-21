@@ -14,7 +14,7 @@
                     <label for="course_id" class="form-label">Course</label>
                     <select class="form-select" id="course_id" name="course_id" required>
                         {% for course in user_courses %}
-                        <option value="{{ course[0] }}">{{ course[1] }} ({{ course[2] }})</option>
+                        <option value="{{ course['course_id'] }}">{{ course['course_name'] }} ({{ course['course_code'] }})</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -39,9 +39,9 @@
         <tbody>
             {% for grade in grades %}
             <tr>
-                <td>{{ grade[0] }}</td>
-                <td>{{ grade[1] }}</td>
-                <td>{{ grade[2] }}</td>
+                <td>{{ grade['name'] }}</td>
+                <td>{{ grade['course_name'] }}</td>
+                <td>{{ grade['grade'] }}</td>
             </tr>
             {% endfor %}
         </tbody>

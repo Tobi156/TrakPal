@@ -41,8 +41,11 @@
         <div class="col-md-4">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">{{ course[1] }} - {{ course[2] }}</h5>
-                    <p class="card-text">Credits: {{ course[3] }}<br>Difficulty: {{ course[4] }}</p>
+                    <h5 class="card-title">{{ course['course_code'] }} - {{ course['course_name'] }}</h5>
+                    <p class="card-text">
+                        Credits: {{ course['credits'] }}<br>
+                        Difficulty: {{ course['difficulty_level'] }}
+                    </p>
                 </div>
             </div>
         </div>

@@ -163,40 +163,46 @@ def delete_user(user_id):
         return jsonify({"error": str(e)}), 500
 
 #CRUD for courses
-@app.route("/courses", methods=["GET"])
+@app.route("/courses")
 @login_required
 def courses():
     user_id = session["user_id"]
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    cur.execute("""
-        SELECT c.course_id, c.course_code, c.course_name, c.credits, c.difficulty_level
-        FROM courses c
-        JOIN grades g ON c.course_id = g.course_id
-        WHERE g.user_id = %s
-    """, (user_id,))
+    cur.execute(
+        """
+        SELECT course_id, course_code, course_name, credits, difficulty_level
+        FROM courses
+        WHERE user_id = %s
+        """,
+        (user_id,),
+    )
     courses = cur.fetchall()
-
     cur.close()
     return render_template("courses.html", courses=courses)
 
 
-@app.route('/add_course', methods=['POST'])
+
+@app.route("/add_course", methods=["POST"])
 @login_required
 def add_course():
-    course_name = request.form['course_name']
-    course_code = request.form['course_code']
-    credits = request.form['credits']
-    difficulty = request.form['difficulty_level']
+    course_code = request.form["course_code"]
+    course_name = request.form["course_name"]
+    credits = request.form["credits"]
+    difficulty_level = request.form["difficulty_level"]
+    user_id = session["user_id"]
 
     cur = mysql.connection.cursor()
-    cur.execute("""
-        INSERT INTO Courses (course_name, course_code, credits, difficulty_level)
-        VALUES (%s, %s, %s, %s)
-    """, (course_name, course_code, credits, difficulty))
+    cur.execute(
+        """
+        INSERT INTO courses (course_code, course_name, credits, difficulty_level, user_id)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (course_code, course_name, credits, difficulty_level, user_id),
+    )
     mysql.connection.commit()
     cur.close()
-    return redirect(url_for('courses'))
+    return redirect("/courses")
+
 
 @app.route("/update_course/<int:course_id>", methods=["PUT"])
 def update_course(course_id):
@@ -242,12 +248,13 @@ def grades():
     cur.execute("""
         SELECT course_id, course_name
         FROM Courses
-    """)
+        WHERE user_id = %s
+    """, (session['user_id'],))
     courses = cur.fetchall()
 
     cur.close()
 
-    return render_template("grades.html", grades=grades, courses=courses)
+    return render_template("grades.html", grades=grades, user_courses=courses)
 
 
 @app.route('/add_grade', methods=['POST'])
