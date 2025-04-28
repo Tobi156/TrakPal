@@ -13,6 +13,18 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in to view this page.")
+            return redirect(url_for("login"))
+        if not session.get("is_admin"):
+            flash("Access denied: Admins only.")
+            return redirect(url_for("home"))
+        return f(*args, **kwargs)
+    return decorated_function
+
 app = Flask(__name__)
 app.secret_key = 'trakpal' 
 
@@ -29,36 +41,52 @@ mysql = MySQL(app)
 @login_required
 def home():
     user_id = session["user_id"]
-
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    # Get user info
-    cur.execute("SELECT name, major FROM users WHERE user_id = %s", (user_id,))
+    # Fetch user info
+    cur.execute("SELECT major FROM users WHERE user_id = %s", (user_id,))
     user = cur.fetchone()
-
-    # Get number of courses and average grade
+    major = user['major'] if user else None
+    # Fetch grades for GPA calculation
     cur.execute("""
-        SELECT COUNT(*) AS total_courses, AVG(grade) AS avg_grade
+        SELECT grade
         FROM grades
         WHERE user_id = %s
     """, (user_id,))
-    grade_stats = cur.fetchone()
-
-    # Recommend careers based on GPA
-    cur.execute("""
-        SELECT * FROM careerrecommendations 
-        WHERE min_gpa <= %s
-    """, (grade_stats['avg_grade'] or 0,))
-    recommended_careers = cur.fetchall()
-
+    grades = cur.fetchall()
+    # Grade points mapping
+    GRADE_POINTS = {
+        'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0,
+        'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+        'D+': 1.3, 'D': 1.0, 'F': 0.0
+    }
+    total_points = 0
+    total_courses = 0
+    for row in grades:
+        grade = row['grade']
+        if grade in GRADE_POINTS:
+            total_points += GRADE_POINTS[grade]
+            total_courses += 1
+    avg_grade = round(total_points / total_courses, 2) if total_courses > 0 else None
+    # Fetch careers based on GPA
+    if avg_grade is not None:
+        cur.execute("""
+            SELECT * FROM careerrecommendations
+            WHERE min_gpa <= %s AND LOWER(major) = LOWER(%s)
+        """, (avg_grade, major))
+        careers = cur.fetchall()
+    else:
+        careers = []
     cur.close()
-
-    return render_template("index.html", user=user, stats=grade_stats, careers=recommended_careers)
-
+    stats = {
+        "total_courses": total_courses,
+        "avg_grade": avg_grade
+    }
+    return render_template("index.html", user=user, stats=stats, careers=careers)
 
 #Dashboard
 @app.route("/dashboard")
 @login_required
+@admin_required
 def dashboard():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM users")
@@ -73,40 +101,33 @@ def signup():
         email = request.form["email"]
         password = generate_password_hash(request.form["password"])
         major = request.form.get("major", "")
-
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO users (name, email, password_hash, major) VALUES (%s, %s, %s, %s)",
                     (name, email, password, major))
         mysql.connection.commit()
         cur.close()
-
         flash("Account created! You can now log in.")
         return redirect(url_for("login"))
-
     return render_template("signup.html")
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
-
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
-
         if user and check_password_hash(user[3], password):  
             session["user_id"] = user[0]
             session["name"] = user[1]
+            session["is_admin"] = user[6]
             flash("Logged in successfully!")
             return redirect(url_for("home"))
         else:
             flash("Invalid credentials.")
-
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
@@ -120,12 +141,10 @@ def add_user():
     if request.method == "POST":
         name = request.form["name"]
         email = request.form["email"]
-
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO users (name, email, password) VALUES (%s, %s, %s)", (name, email,))
         mysql.connection.commit()
         cur.close()
-
         return redirect(url_for("dashboard"))
 
 @app.route("/users", methods=["GET"])
@@ -180,8 +199,6 @@ def courses():
     cur.close()
     return render_template("courses.html", courses=courses)
 
-
-
 @app.route("/add_course", methods=["POST"])
 @login_required
 def add_course():
@@ -190,7 +207,6 @@ def add_course():
     credits = request.form["credits"]
     difficulty_level = request.form["difficulty_level"]
     user_id = session["user_id"]
-
     cur = mysql.connection.cursor()
     cur.execute(
         """
@@ -202,7 +218,6 @@ def add_course():
     mysql.connection.commit()
     cur.close()
     return redirect("/courses")
-
 
 @app.route("/update_course/<int:course_id>", methods=["PUT"])
 def update_course(course_id):
@@ -235,34 +250,28 @@ def delete_course(course_id):
 @login_required
 def grades():
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
     cur.execute("""
-        SELECT u.name, c.course_name, g.grade
+        SELECT u.name, c.course_name, g.grade, c.course_code
         FROM Grades g
         JOIN Users u ON g.user_id = u.user_id
         JOIN Courses c ON g.course_id = c.course_id
         WHERE g.user_id = %s
     """, (session['user_id'],))
     grades = cur.fetchall()
-
     cur.execute("""
-        SELECT course_id, course_name
+        SELECT course_id, course_name, course_code
         FROM Courses
         WHERE user_id = %s
     """, (session['user_id'],))
     courses = cur.fetchall()
-
     cur.close()
-
     return render_template("grades.html", grades=grades, user_courses=courses)
-
 
 @app.route('/add_grade', methods=['POST'])
 @login_required
 def add_grade():
     course_id = request.form['course_id']
     grade = request.form['grade']
-
     cur = mysql.connection.cursor()
     cur.execute("""
         INSERT INTO Grades (user_id, course_id, grade)
@@ -303,28 +312,55 @@ def delete_grade(grade_id):
 @login_required
 def careers():
     user_id = session["user_id"]
-
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    
+    # Fetch user major
+    cur.execute("SELECT major FROM users WHERE user_id = %s", (user_id,))
+    user = cur.fetchone()
+    major = user['major'] if user else None
+    # Fetch all grades for user
     cur.execute("""
-        SELECT ROUND(AVG(grade), 2) AS gpa
+        SELECT grade
         FROM grades
         WHERE user_id = %s
     """, (user_id,))
-    result = cur.fetchone()
-    gpa = result["gpa"] if result and result["gpa"] is not None else 0.0
-
-    
-    cur.execute("""
-        SELECT * FROM careerrecommendations
-        WHERE min_gpa <= %s
-    """, (gpa,))
+    grades = cur.fetchall()
+    # Mapping letter grades to grade points
+    GRADE_POINTS = {
+        'A': 4.0,
+        'A-': 3.7,
+        'B+': 3.3,
+        'B': 3.0,
+        'B-': 2.7,
+        'C+': 2.3,
+        'C': 2.0,
+        'C-': 1.7,
+        'D+': 1.3,
+        'D': 1.0,
+        'F': 0.0
+    }
+    total_points = 0
+    total_courses = 0
+    for grade_row in grades:
+        grade_letter = grade_row['grade']
+        if grade_letter in GRADE_POINTS:
+            total_points += GRADE_POINTS[grade_letter]
+            total_courses += 1
+    gpa = round(total_points / total_courses, 2) if total_courses > 0 else 0.0
+    # Fetch careers matching GPA and Major
+    if major:
+        cur.execute("""
+            SELECT * FROM careerrecommendations
+            WHERE min_gpa <= %s AND LOWER(major) = LOWER(%s)
+        """, (gpa, major))
+    else:
+        # If no major set, fallback to only GPA
+        cur.execute("""
+            SELECT * FROM careerrecommendations
+            WHERE min_gpa <= %s
+        """, (gpa,))
     careers = cur.fetchall()
     cur.close()
-
     return render_template("careers.html", careers=careers, gpa=gpa)
-
 
 @app.route("/add_career", methods=["POST"])
 def add_career():
@@ -332,13 +368,11 @@ def add_career():
         career_name = request.form["career_name"]
         description = request.form["description"]
         min_gpa = request.form["min_gpa"]
-
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO careerrecommendations (career_name, description, min_gpa) VALUES (%s, %s, %s)", 
                     (career_name, description, min_gpa))
         mysql.connection.commit()
         cur.close()
-
         return redirect(url_for("careers"))
 
 @app.route("/update_career/<int:career_id>", methods=["PUT"])
@@ -366,7 +400,6 @@ def delete_career(career_id):
         return jsonify({"message": "Career recommendation deleted successfully!"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True)
