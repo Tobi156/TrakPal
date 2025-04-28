@@ -43,7 +43,7 @@ def home():
     user_id = session["user_id"]
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     # Fetch user info
-    cur.execute("SELECT major FROM users WHERE user_id = %s", (user_id,))
+    cur.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
     user = cur.fetchone()
     major = user['major'] if user else None
     # Fetch grades for GPA calculation
@@ -353,7 +353,6 @@ def careers():
             WHERE min_gpa <= %s AND LOWER(major) = LOWER(%s)
         """, (gpa, major))
     else:
-        # If no major set, fallback to only GPA
         cur.execute("""
             SELECT * FROM careerrecommendations
             WHERE min_gpa <= %s
