@@ -155,7 +155,7 @@ def get_users():
     cur.close()
     return jsonify(users)
 
-@app.route("/update_user/<int:user_id>", methods=["PUT"])
+@app.route("/update_user/<int:user_id>", methods=["POST"])
 def update_user(user_id):
     try:
         data = request.json
@@ -170,7 +170,7 @@ def update_user(user_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/delete_user/<int:user_id>", methods=["DELETE"])
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
 def delete_user(user_id):
     try:
         cur = mysql.connection.cursor()
@@ -219,51 +219,56 @@ def add_course():
     cur.close()
     return redirect("/courses")
 
-@app.route("/update_course/<int:course_id>", methods=["PUT"])
+@app.route('/update_course/<int:course_id>', methods=['POST'])
+@login_required
 def update_course(course_id):
-    try:
-        data = request.json
-        cur = mysql.connection.cursor()
-        cur.execute(
-            "UPDATE courses SET course_code = %s, course_name = %s, credits = %s WHERE id = %s",
-            (data["course_code"], data["course_name"], data["credits"], course_id),
-        )
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({"message": "Course updated successfully!"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    name = request.form['course_name']
+    code = request.form['course_code']
+    credits = request.form['credits']
+    difficulty = request.form['difficulty_level']
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        UPDATE Courses
+        SET course_name = %s, course_code = %s, credits = %s, difficulty_level = %s
+        WHERE course_id = %s AND user_id = %s
+    """, (name, code, credits, difficulty, course_id, session['user_id']))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('courses'))
 
-@app.route("/delete_course/<int:course_id>", methods=["DELETE"])
+@app.route("/delete_course/<int:course_id>", methods=["POST"])
+@login_required
 def delete_course(course_id):
-    try:
-        cur = mysql.connection.cursor()
-        cur.execute("DELETE FROM courses WHERE id = %s", (course_id,))
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({"message": "Course deleted successfully!"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM courses WHERE course_id = %s", (course_id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('courses'))
+
 
 #CRUD for grades
 @app.route('/grades')
 @login_required
 def grades():
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    # Include g.grade_id in SELECT
     cur.execute("""
-        SELECT u.name, c.course_name, g.grade, c.course_code
+        SELECT g.grade_id, u.name, c.course_name, g.grade, c.course_code
         FROM Grades g
         JOIN Users u ON g.user_id = u.user_id
         JOIN Courses c ON g.course_id = c.course_id
         WHERE g.user_id = %s
     """, (session['user_id'],))
     grades = cur.fetchall()
+
     cur.execute("""
         SELECT course_id, course_name, course_code
         FROM Courses
         WHERE user_id = %s
     """, (session['user_id'],))
     courses = cur.fetchall()
+
     cur.close()
     return render_template("grades.html", grades=grades, user_courses=courses)
 
@@ -281,31 +286,24 @@ def add_grade():
     cur.close()
     return redirect(url_for('grades'))
 
-@app.route("/update_grade/<int:grade_id>", methods=["PUT"])
+@app.route('/update_grade/<int:grade_id>', methods=['POST'])
+@login_required
 def update_grade(grade_id):
-    try:
-        data = request.json
-        cur = mysql.connection.cursor()
-        cur.execute(
-            "UPDATE grades SET grade = %s WHERE id = %s",
-            (data["grade"], grade_id),
-        )
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({"message": "Grade updated successfully!"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    grade = request.form['grade']
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE Grades SET grade = %s WHERE grade_id = %s AND user_id = %s", (grade, grade_id, session['user_id']))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('grades'))
 
-@app.route("/delete_grade/<int:grade_id>", methods=["DELETE"])
+@app.route("/delete_grade/<int:grade_id>", methods=["POST"])
+@login_required
 def delete_grade(grade_id):
-    try:
-        cur = mysql.connection.cursor()
-        cur.execute("DELETE FROM grades WHERE id = %s", (grade_id,))
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({"message": "Grade deleted successfully!"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM grades WHERE grade_id = %s", (grade_id,))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('grades'))
 
 #CRUD for CareerRec
 @app.route("/careers")
@@ -374,7 +372,7 @@ def add_career():
         cur.close()
         return redirect(url_for("careers"))
 
-@app.route("/update_career/<int:career_id>", methods=["PUT"])
+@app.route("/update_career/<int:career_id>", methods=["POST"])
 def update_career(career_id):
     try:
         data = request.json
@@ -389,7 +387,7 @@ def update_career(career_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/delete_career/<int:career_id>", methods=["DELETE"])
+@app.route("/delete_career/<int:career_id>", methods=["POST"])
 def delete_career(career_id):
     try:
         cur = mysql.connection.cursor()

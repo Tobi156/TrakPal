@@ -11,7 +11,7 @@
         <h5 class="mb-1">User: {{ user.name }}</h5>
         <p class="mb-0">Major: {{ user.major or "Undeclared" }}</p>
         <p class="mb-0">Courses Taken: {{ stats.total_courses or 0 }}</p>
-        <p class="mb-0">Average Grade: {{ stats.avg_grade or "N/A" }}</p>
+        <p class="mb-0">GPA: {{ stats.avg_grade or "N/A" }}</p>
     </div>
     {% endif %}
 

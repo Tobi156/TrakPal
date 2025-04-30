@@ -41,15 +41,62 @@
         <div class="col-md-4">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">{{ course['course_code'] }} - {{ course['course_name'] }}</h5>
-                    <p class="card-text">
-                        Credits: {{ course['credits'] }}<br>
-                        Difficulty: {{ course['difficulty_level'] }}
-                    </p>
+                    <form action="{{ url_for('update_course', course_id=course['course_id']) }}" method="POST" class="course-form">
+                        <input type="text" name="course_name" value="{{ course['course_name'] }}" class="form-control mb-1" disabled required>
+                        <input type="text" name="course_code" value="{{ course['course_code'] }}" class="form-control mb-1" disabled required>
+                        <input type="number" name="credits" value="{{ course['credits'] }}" class="form-control mb-1" disabled required>
+                        <select name="difficulty_level" class="form-select mb-2" disabled>
+                            <option value="Easy" {% if course['difficulty_level'] == 'Easy' %}selected{% endif %}>Easy</option>
+                            <option value="Medium" {% if course['difficulty_level'] == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="Hard" {% if course['difficulty_level'] == 'Hard' %}selected{% endif %}>Hard</option>
+                        </select>
+                        <div class="d-flex gap-1">
+                            <button type="button" class="btn btn-sm btn-warning edit-btn" style="background-color: #0d6efd; border-color: #0d6efd; color: white;">Edit</button>
+                            <button type="submit" class="btn btn-sm btn-success update-btn" style="display: none;">Update</button>
+                            <button type="button" class="btn btn-sm btn-secondary cancel-btn" style="display: none;">Cancel</button>
+                        </div>
+                    </form>
+                    <form action="{{ url_for('delete_course', course_id=course['course_id']) }}" method="POST" class="mt-2" onsubmit="return confirm('Delete this course?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+
+<!-- JavaScript Logic (edit / update / cancel) -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".edit-btn").forEach(function (editBtn) {
+        editBtn.addEventListener("click", function () {
+            const form = editBtn.closest("form");
+            const inputs = form.querySelectorAll("input, select");
+            const updateBtn = form.querySelector(".update-btn");
+            const cancelBtn = form.querySelector(".cancel-btn");
+
+            // Enable all fields
+            inputs.forEach(input => {
+                input.disabled = false;
+                input.dataset.originalValue = input.value; // Save original
+            });
+
+            editBtn.style.display = "none";
+            updateBtn.style.display = "inline-block";
+            cancelBtn.style.display = "inline-block";
+
+            cancelBtn.addEventListener("click", function () {
+                inputs.forEach(input => {
+                    input.value = input.dataset.originalValue;
+                    input.disabled = true;
+                });
+                updateBtn.style.display = "none";
+                cancelBtn.style.display = "none";
+                editBtn.style.display = "inline-block";
+            }, { once: true });
+        });
+    });
+});
+</script>
 {% endblock %}
