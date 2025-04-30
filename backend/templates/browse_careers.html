@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}Careers - TrakPal{% endblock %}
+{% block title %}Browse Careers - TrakPal{% endblock %}
 
 {% block content %}
 <style>
@@ -30,8 +30,9 @@
     padding-right: 10px;
   }
 </style>
+
 <div class="container mt-4">
-  <h2 class="text-center mb-4">Career Recommendations</h2>
+  <h2 class="text-center mb-4">All Careers</h2>
   <div class="row">
     {% for career in careers %}
     <div class="col-md-4">
@@ -41,8 +42,7 @@
              alt="{{ career.career_name }}">
         <div class="card-body">
           <h5 class="card-title">{{ career.career_name }}</h5>
-          <a href="{{ url_for('career_detail', career_id=career.career_id, from_page='careers') }}"
-            class="btn btn-outline-primary btn-sm">
+          <a href="{{ url_for('career_detail', career_id=career.career_id) }}" class="btn btn-outline-primary btn-sm">
             View Details
           </a>
         </div>
@@ -50,10 +50,5 @@
     </div>
     {% endfor %}
   </div>
-  <div class="text-center mt-4">
-    <a href="{{ url_for('browse_all_careers') }}" class="btn btn-primary btn-md">
-      Browse All Careers
-    </a>
-  </div>  
 </div>
 {% endblock %}

@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block title %}{{ career.career_name }} - TrakPal{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-lg">
+    <div class="row no-gutters">
+      <div class="col-md-5">
+        <img src="https://raw.githubusercontent.com/xawmbii/hw/main/images.png"
+             class="card-img img-fluid"
+             alt="{{ career.career_name }}">
+      </div>
+      <div class="col-md-7">
+        <div class="card-body">
+          <h3 class="card-title">{{ career.career_name }}</h3>
+          <p class="card-text"><strong>Recommended Major:</strong> {{ career.major }}</p>
+          <p class="card-text"><strong>Minimum GPA:</strong> {{ career.min_gpa }}</p>
+          <p class="card-text"><strong>Description:</strong> {{ career.description or 'No description available.' }}</p>
+          <a href="{{ url_for('careers') if from_page == 'careers' else url_for('browse_all_careers') }}"
+            class="btn btn-secondary mt-3">← Back</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

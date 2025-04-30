@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
+from MySQLdb.cursors import DictCursor
 from functools import wraps
 
 def login_required(f):
@@ -372,31 +373,27 @@ def add_career():
         cur.close()
         return redirect(url_for("careers"))
 
-@app.route("/update_career/<int:career_id>", methods=["POST"])
-def update_career(career_id):
-    try:
-        data = request.json
-        cur = mysql.connection.cursor()
-        cur.execute(
-            "UPDATE careerrecommendations SET career_name = %s, description = %s, min_gpa = %s WHERE id = %s",
-            (data["career_name"], data["description"], data["min_gpa"], career_id),
-        )
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({"message": "Career recommendation updated successfully!"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route('/careers/all')
+@login_required
+def browse_all_careers():
+    cur = mysql.connection.cursor(DictCursor)
+    cur.execute("SELECT * FROM CareerRecommendations")
+    all_careers = cur.fetchall()
+    cur.close()
+    return render_template('browse_careers.html', careers=all_careers)
 
-@app.route("/delete_career/<int:career_id>", methods=["POST"])
-def delete_career(career_id):
-    try:
-        cur = mysql.connection.cursor()
-        cur.execute("DELETE FROM careerrecommendations WHERE id = %s", (career_id,))
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({"message": "Career recommendation deleted successfully!"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+@app.route('/career/<int:career_id>')
+@login_required
+def career_detail(career_id):
+    from_page = request.args.get('from_page', 'all')
+    cur = mysql.connection.cursor(DictCursor)
+    cur.execute("SELECT * FROM CareerRecommendations WHERE career_id = %s", (career_id,))
+    career = cur.fetchone()
+    cur.close()
+    if career:
+        return render_template('career_detail.html', career=career, from_page=from_page)
+    else:
+        return "Career not found", 404
+    
 if __name__ == "__main__":
     app.run(debug=True)
