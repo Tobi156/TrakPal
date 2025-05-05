@@ -71,9 +71,11 @@ def home():
     # Fetch careers based on GPA
     if avg_grade is not None:
         cur.execute("""
-            SELECT * FROM careerrecommendations
-            WHERE min_gpa <= %s AND LOWER(major) = LOWER(%s)
-        """, (avg_grade, major))
+            SELECT cr.*
+            FROM careerrecommendations cr
+            JOIN careermatches cm ON cr.career_id = cm.career_id
+            WHERE cm.major = %s AND cr.min_gpa <= %s
+        """, (major, avg_grade))
         careers = cur.fetchall()
     else:
         careers = []
@@ -348,13 +350,16 @@ def careers():
     # Fetch careers matching GPA and Major
     if major:
         cur.execute("""
-            SELECT * FROM careerrecommendations
-            WHERE min_gpa <= %s AND LOWER(major) = LOWER(%s)
-        """, (gpa, major))
+            SELECT cr.*
+            FROM careerrecommendations cr
+            JOIN careermatches cm ON cr.career_id = cm.career_id
+            WHERE LOWER(cm.major) = LOWER(%s) AND cr.min_gpa <= %s
+        """, (major, gpa))
     else:
         cur.execute("""
-            SELECT * FROM careerrecommendations
-            WHERE min_gpa <= %s
+            SELECT cr.*
+            FROM careerrecommendations cr
+            WHERE cr.min_gpa <= %s
         """, (gpa,))
     careers = cur.fetchall()
     cur.close()
@@ -386,12 +391,14 @@ def browse_all_careers():
 @login_required
 def career_detail(career_id):
     from_page = request.args.get('from_page', 'all')
-    cur = mysql.connection.cursor(DictCursor)
-    cur.execute("SELECT * FROM CareerRecommendations WHERE career_id = %s", (career_id,))
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cur.execute("SELECT * FROM careerrecommendations WHERE career_id = %s", (career_id,))
     career = cur.fetchone()
+    cur.execute("SELECT major FROM careermatches WHERE career_id = %s", (career_id,))
+    majors = [row['major'] for row in cur.fetchall()]
     cur.close()
     if career:
-        return render_template('career_detail.html', career=career, from_page=from_page)
+        return render_template('career_detail.html', career=career, majors=majors, from_page=from_page)
     else:
         return "Career not found", 404
     

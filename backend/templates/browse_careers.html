@@ -37,7 +37,7 @@
     {% for career in careers %}
     <div class="col-md-4">
       <div class="card">
-        <img src="https://raw.githubusercontent.com/xawmbii/hw/main/images.png"
+        <img src="{{ career.image_url or'https://raw.githubusercontent.com/xawmbii/hw/main/images.png'}}"
              class="card-img-top img-fluid"
              alt="{{ career.career_name }}">
         <div class="card-body">

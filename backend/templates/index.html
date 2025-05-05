@@ -2,6 +2,18 @@
 {% block title %}Home - TrakPal{% endblock %}
 
 {% block content %}
+<style>
+    .card-img-top {
+      height: 200px;
+      width: 100%;
+      object-fit: cover;
+    }
+  
+    .card {
+      height: 100%; 
+    }
+</style>
+  
 <div class="text-center">
     <h1 class="mb-4">Welcome to <strong>TrakPal</strong></h1>
     <p class="lead">Your personal academic and career tracking assistant.</p>
@@ -60,7 +72,8 @@
             {% for career in careers %}
             <div class="col-md-4">
                 <div class="card mb-3">
-                    <img src="https://raw.githubusercontent.com/xawmbii/hw/main/images.png" class="card-img-top" alt="{{ career.career_name }}">
+                    <img src="{{ career.image_url or'https://raw.githubusercontent.com/xawmbii/hw/main/images.png'}}"
+                    class="card-img-top" alt="{{ career.career_name }}">
                     <div class="card-body">
                         <h5 class="card-title">{{ career.career_name }}</h5>
                         <p class="card-text">{{ career.description }}</p>
