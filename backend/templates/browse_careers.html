@@ -18,13 +18,13 @@
 
   .row {
     display: flex;
-    flex-wrap: wrap; 
-    margin-left: -8px; 
-    margin-right: -8px; 
+    flex-wrap: wrap;
+    margin-left: -8px;
+    margin-right: -8px;
   }
 
   .col-md-4 {
-    width:320px;
+    width: 320px;
     margin-bottom: 16px;
     padding-left: 50px;
     padding-right: 10px;
@@ -37,12 +37,17 @@
     {% for career in careers %}
     <div class="col-md-4">
       <div class="card">
-        <img src="{{ career.image_url or'https://raw.githubusercontent.com/xawmbii/hw/main/images.png'}}"
-             class="card-img-top img-fluid"
-             alt="{{ career.career_name }}">
+        <img
+          src="{{ career.image_url or'https://raw.githubusercontent.com/xawmbii/hw/main/images.png'}}"
+          class="card-img-top img-fluid"
+          alt="{{ career.career_name }}"
+        />
         <div class="card-body">
           <h5 class="card-title">{{ career.career_name }}</h5>
-          <a href="{{ url_for('career_detail', career_id=career.career_id) }}" class="btn btn-outline-primary btn-sm">
+          <a
+            href="{{ url_for('career_detail', career_id=career.career_id) }}"
+            class="btn btn-outline-primary btn-sm"
+          >
             View Details
           </a>
         </div>
