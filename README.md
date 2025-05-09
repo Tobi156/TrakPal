@@ -7,17 +7,13 @@
 - **Grade Tracking**: Enter and monitor grades for different courses.
 - **Career Insights**: Compare your GPA to industry standards.
 - **Course Recommendations**: Get suggested courses to help achieve career goals.
-- **Progress Visualization**: Graphs and insights to track academic growth.
 
 ##  Technologies Used
-- **Backend**: Flask, Python, MariaDB.
-- **Frontend**: HTML, CSS, JavaScript.
+- **Backend**: Flask, Python, SQL.
+- **Frontend**: HTML, CSS, JavaScript, Bootstrap.
 - **Database**: MariaDB.
 - **Version Control**: GitHub.
 - **Project Management**: GitHub Project.
-
-## Status
-- **In progress**
 
 ## License
 
